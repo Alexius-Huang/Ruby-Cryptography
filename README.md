@@ -23,7 +23,7 @@ And you can also decrypt message by `Cipher::Vigenere#decrypt` :
   # => "INVASIONOFNORMANDY"
 ```
 
-You can generate new key randomly by 'Cipher::Vigenere#random_key' with a parameter which specify the length of the key :
+You can generate new key randomly by `Cipher::Vigenere#random_key` with a parameter which specify the length of the key :
 
 ```ruby
   key.random_key 5
