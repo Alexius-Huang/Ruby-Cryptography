@@ -72,11 +72,20 @@ module Cipher
 				message_length_little_endian << "0" until message_length_little_endian.length % 16 == 0
 				hexadecimal << message_length_little_endian.upcase
 
+				# Initialize 4 Registers
+				A_REGISTER = "01234567"
+				B_REGISTER = "89ABCDEF"
+				C_REGISTER = "FEDCBA98"
+				D_REGISTER = "76543210"
+
+				# 
+
 				# DEBUG
 				# puts "hexadecimal : " + hexadecimal.to_s
 				# puts "length_of_hexadecimal : " + length_of_hexadecimal.to_s
 				# puts "decimal : " + decimal.to_s
 				# puts "message_length_little_endian : " + message_length_little_endian.to_s
+
 			end
 
 			private
