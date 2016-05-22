@@ -52,9 +52,11 @@ module Cipher
 		end
 	end
 
-	module SymmetricEncryption
+	module Hash
 		class MD5
 			def self.encrypt(message)
+				md5 = Cipher::Hash::MD5
+
 				# Convert message into hexadecimal message
 				hexadecimal = ""
 				message.each_char { |char| hexadecimal << char.ord.to_s(16) }
@@ -67,24 +69,32 @@ module Cipher
 				hexadecimal << "0" until hexadecimal.length % 112 == 0 # 448 bits = 112 bytes
 			
 				# Fill in the length of the message (in bits)
-				md5 = Cipher::SymmetricEncryption::MD5
 				message_length_little_endian = md5.little_endian(length_of_hexadecimal.to_s(16))
 				message_length_little_endian << "0" until message_length_little_endian.length % 16 == 0
 				hexadecimal << message_length_little_endian.upcase
 
 				# Initialize 4 Registers
-				A_REGISTER = "01234567"
-				B_REGISTER = "89ABCDEF"
-				C_REGISTER = "FEDCBA98"
-				D_REGISTER = "76543210"
+				a_REGISTER = "01234567"
+				b_REGISTER = "89ABCDEF"
+				c_REGISTER = "FEDCBA98"
+				d_REGISTER = "76543210"
 
-				# 
+				# Partition hexedecimal message
+				partitioned_512bits = md5.partition_by_bytes(hexadecimal, 128)
+				puts partitioned_512bits
+				m = []
+				partitioned_512bits.each do |part|
+					m << partition_by_bytes(part, 8)
+					puts m
+				end
+
+
 
 				# DEBUG
-				# puts "hexadecimal : " + hexadecimal.to_s
-				# puts "length_of_hexadecimal : " + length_of_hexadecimal.to_s
-				# puts "decimal : " + decimal.to_s
-				# puts "message_length_little_endian : " + message_length_little_endian.to_s
+				puts "hexadecimal : " + hexadecimal.to_s
+				puts "length_of_hexadecimal : " + length_of_hexadecimal.to_s
+				puts "decimal : " + decimal.to_s
+				puts "message_length_little_endian : " + message_length_little_endian.to_s
 
 			end
 
@@ -102,6 +112,63 @@ module Cipher
 				end
 				return partition.join
 			end
+
+			def self.partition_by_bytes(input, bytes)
+				result = [""]
+				input.each_char do |char|
+					if result.last.length < bytes
+						result.last << char
+					else
+						result << char
+					end
+				end
+				return result
+			end
+
+			def self.left_round_shifted(input, s)
+				s.times { input = input[1..-1] << input[0] }
+			end
+
+			def logic_not(input)
+				input = ("FFFFFFFF".hex - input.hex).to_s(16).upcase
+			end
+
+			# Non Linear Functions
+			def self.func_F(x, y, z)
+				(x & y) | (logic_not(x) & z)
+			end
+
+			def self.func_G(x, y, z)
+				(x & z) | (y & logic_not(z))
+			end
+
+			def self.func_H(x, y, z)
+				x ^ y ^ z
+			end
+
+			def self.func_I(x, y, z)
+				y ^ (x | logic_not(z))
+			end
+
+			def self.func_FF(w, x, y, z, message_part, shift_times, ti)
+				md5 = Cipher::Hash::MD5
+				return w = x + md5.left_round_shifted((w + md5.func_F(x, y, z) + message_part + ti), shift_times)
+			end
+
+			def self.func_GG(w, x, y, z, message_part, shift_times, ti)
+				md5 = Cipher::Hash::MD5
+				return w = x + md5.left_round_shifted((w + md5.func_G(x, y, z) + message_part + ti), shift_times)
+			end
+
+			def self.func_HH(w, x, y, z, message_part, shift_times, ti)
+				md5 = Cipher::Hash::MD5
+				return w = x + md5.left_round_shifted((w + md5.func_H(x, y, z) + message_part + ti), shift_times)
+			end
+
+			def self.func_II(w, x, y, z, message_part, shift_times, ti)
+ 				md5 = Cipher::Hash::MD5
+ 				return w = x + md5.left_round_shifted((w + md5.func_I(x, y, z) + message_part + ti), shift_times)
+ 			end
 		end
 	end
 end
