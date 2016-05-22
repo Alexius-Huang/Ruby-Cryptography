@@ -66,35 +66,39 @@ module Cipher
 
 				# Fill in 1 and 0s until the lenth MOD 448 bit == 0
 				hexadecimal << "80"
-				hexadecimal << "0" until hexadecimal.length % 112 == 0 # 448 bits = 112 bytes
-			
+				hexadecimal << "0" until (hexadecimal.length % 128 + 1) % (112 + 1) == 0 # 448 bits = 112 bytes
+				puts "Check hexadecimal fill in 1 and 0's : \n" << hexadecimal
+
 				# Fill in the length of the message (in bits)
 				message_length_little_endian = md5.little_endian(length_of_hexadecimal.to_s(16))
 				message_length_little_endian << "0" until message_length_little_endian.length % 16 == 0
 				hexadecimal << message_length_little_endian.upcase
 
 				# Initialize 4 Registers
-				a_REGISTER = "01234567"
-				b_REGISTER = "89ABCDEF"
-				c_REGISTER = "FEDCBA98"
-				d_REGISTER = "76543210"
+				a_REGISTER = md5.little_endian "01234567"
+				b_REGISTER = md5.little_endian "89ABCDEF"
+				c_REGISTER = md5.little_endian "FEDCBA98"
+				d_REGISTER = md5.little_endian "76543210"
+				#	puts a_REGISTER << b_REGISTER << c_REGISTER << d_REGISTER # DEBUG
 
 				# Partition hexedecimal message
 				partitioned_512bits = md5.partition_by_bytes(hexadecimal, 128)
-				puts partitioned_512bits
+				puts "Partitioned 512 bits parts : " << partitioned_512bits.length.to_s # DEBUG
+				puts "Partitioned 512 bits : \n" <<  partitioned_512bits.join("\n") # DEBUG
 				m = []
-				partitioned_512bits.each do |part|
+				partitioned_512bits.each.with_index do |part, index|
 					m << partition_by_bytes(part, 8)
-					puts m
 				end
+				m.each.with_index { |item, index| puts "Check #{index.next} : \n" << item.join("\ne") } # DEBUG
+
 
 
 
 				# DEBUG
 				puts "hexadecimal : " + hexadecimal.to_s
-				puts "length_of_hexadecimal : " + length_of_hexadecimal.to_s
+				# puts "length_of_hexadecimal : " + length_of_hexadecimal.to_s
 				puts "decimal : " + decimal.to_s
-				puts "message_length_little_endian : " + message_length_little_endian.to_s
+				# puts "message_length_little_endian : " + message_length_little_endian.to_s
 
 			end
 
